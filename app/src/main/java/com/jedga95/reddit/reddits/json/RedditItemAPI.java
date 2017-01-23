@@ -13,6 +13,7 @@ import retrofit2.http.GET;
 
 public class RedditItemAPI {
 
+    public static final String HTTP_BASE = "https://";
     public static final String BASE_URL = "https://www.reddit.com";
 
     /**

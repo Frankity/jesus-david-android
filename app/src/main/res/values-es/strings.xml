@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_fetching">Error al cargar los datos de Reddit</string>
+    <string name="no_connection">Sin conexión, toca para reintentar</string>
+    <string name="no_short_description">Sin descripción</string>
+    <string name="title_reddit_detail">Detalle</string>
+</resources>

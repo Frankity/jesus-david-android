@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">Reddit</string>
+    <string name="app_name" translatable="false">Reddit</string>
     <string name="title_reddit_detail">Detail</string>
+    <string name="no_short_description">No description</string>
     <string name="error_fetching">Error fetching Reddit data</string>
     <string name="no_connection">No connection, tap to retry</string>
 </resources>

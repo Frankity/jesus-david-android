@@ -27,10 +27,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database) {
         database.execSQL("CREATE TABLE reddits (_id INTEGER PRIMARY KEY AUTOINCREMENT"
+                + ", url TEXT"
                 + ", title TEXT"
                 + ", thumb TEXT"
                 + ", description TEXT"
-                + ", banner TEXT);");
+                + ", banner TEXT"
+                + ", content TEXT);");
 
     }
 
@@ -41,11 +43,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void addRedditEntry(RedditItem item) {
-        ContentValues values = new ContentValues(4);
+        ContentValues values = new ContentValues(6);
+        values.put("url", item.getUrl());
         values.put("title", item.getDisplayName());
         values.put("thumb", item.getIconImgUrl());
         values.put("description", item.getDescription());
         values.put("banner", item.getBannerImageUrl());
+        values.put("content", item.getContent());
 
         getWritableDatabase().insertOrThrow("reddits", null, values);
 
@@ -54,15 +58,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public ArrayList<RedditItem> getAllEntries() {
         ArrayList<RedditItem> items = new ArrayList<>();
         Cursor cursor = getReadableDatabase().query("reddits",
-                new String[] { "_id", "title", "thumb", "description", "banner"},
+                new String[] { "_id", "url", "title", "thumb", "description", "banner", "content"},
                 null, null, null, null, null);
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
                 final RedditItem item = new RedditItem();
-                item.setDisplayName(cursor.getString(1));
-                item.setIconImgUrl(cursor.getString(2));
-                item.setDescription(cursor.getString(3));
-                item.setBannerImageUrl(cursor.getString(4));
+                item.setUrl(cursor.getString(1));
+                item.setDisplayName(cursor.getString(2));
+                item.setIconImgUrl(cursor.getString(3));
+                item.setDescription(cursor.getString(4));
+                item.setBannerImageUrl(cursor.getString(5));
+                item.setContent(cursor.getString(6));
 
                 items.add(item);
 

@@ -27,6 +27,8 @@ import com.jedga95.reddit.ui.util.ColorGenerator;
 import com.squareup.picasso.Picasso;
 import com.wang.avi.AVLoadingIndicatorView;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.util.List;
 
 /**
@@ -86,8 +88,12 @@ public class RedditListActivity extends AppCompatActivity {
         mNoConnectionLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showLoadingView();
-                //parseEntries(true);
+                showLoadingView(new Runnable() {
+                    @Override
+                    public void run() {
+                        parseEntries(true);
+                    }
+                });
             }
         });
 
@@ -123,15 +129,19 @@ public class RedditListActivity extends AppCompatActivity {
 
                 // If we're on two panel view, click on the first item of the list
                 if (mTwoPane) {
-                    mRecyclerView.post(new Runnable() {
+                    mRecyclerView.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            mRecyclerView
-                                    .findViewHolderForAdapterPosition(0).itemView.performClick();
+                            final View itemView = mRecyclerView.findViewHolderForAdapterPosition
+                                    (0).itemView;
+                            if (itemView != null) {
+                                itemView.performClick();
+                            }
                         }
-                    });
+                    }, 100 /* wait until layout has settled */);
                 }
 
+                if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(false);
                 dismissLoadingView();
             }
 
@@ -144,20 +154,21 @@ public class RedditListActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), R.string.error_fetching, Toast
                             .LENGTH_SHORT).show();
                 }
+
+                if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(false);
                 dismissLoadingView();
             }
         }, forceParse);
-        if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(false);
     }
 
-    private void showLoadingView() {
+    private void showLoadingView(final Runnable endAction) {
         mLoadingView.setVisibility(View.VISIBLE);
         mLoadingView.animate().alpha(1f).setListener(null);
         mNoConnectionLayout.animate().alpha(0f).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mNoConnectionLayout.setVisibility(View.GONE);
-                parseEntries(true);
+                if (endAction != null) endAction.run();
                 super.onAnimationEnd(animation);
             }
         });
@@ -192,6 +203,8 @@ public class RedditListActivity extends AppCompatActivity {
             mGenerator = ColorGenerator.MATERIAL;
             mDrawableBuilder = TextDrawable.builder()
                     .beginConfig()
+                    .width(getResources().getDimensionPixelSize(R.dimen.thumb_size))
+                    .height(getResources().getDimensionPixelSize(R.dimen.thumb_size))
                     .endConfig()
                     .rect();
         }
@@ -208,14 +221,16 @@ public class RedditListActivity extends AppCompatActivity {
             final RedditItem item = mValues.get(position);
             holder.mItem = item;
             holder.mTitleView.setText(item.getDisplayName());
-            holder.mDescriptionView.setText(item.getShortDescription());
+            final int color = mGenerator.getColor(item.getDisplayName());
+            if (!TextUtils.isEmpty(item.getShortDescription())) {
+                holder.mDescriptionView.setText(item.getShortDescription());
+            }
+
+            holder.mThumbView.setImageDrawable(mDrawableBuilder.build(item.getDisplayName()
+                    .substring(0, 1).toUpperCase(), color));
             if (!TextUtils.isEmpty(item.getIconImgUrl())) {
                 Picasso.with(RedditListActivity.this)
-                        .load(item.getIconImgUrl()).into(holder.mThumbView);
-            } else {
-                int color = mGenerator.getColor(item.getDisplayName());
-                holder.mThumbView.setImageDrawable(mDrawableBuilder.build(item.getDisplayName()
-                        .substring(0, 1).toUpperCase(), color));
+                        .load(item.getIconImgUrl()).noPlaceholder().into(holder.mThumbView);
             }
 
             holder.mView.setOnClickListener(new View.OnClickListener() {

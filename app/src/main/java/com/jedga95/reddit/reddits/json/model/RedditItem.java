@@ -1,9 +1,10 @@
 package com.jedga95.reddit.reddits.json.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.jedga95.reddit.reddits.json.RedditItemAPI;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.io.Serializable;
 
@@ -12,6 +13,10 @@ import java.io.Serializable;
  */
 
 public class RedditItem implements Serializable {
+
+    @SerializedName("url")
+    @Expose
+    private String url;
 
     @SerializedName("icon_img")
     @Expose
@@ -25,13 +30,26 @@ public class RedditItem implements Serializable {
     @Expose
     private String bannerImageUrl;
 
-    @SerializedName("description")
+    @SerializedName("public_description")
     @Expose
     private String description;
+
+    @SerializedName("description_html")
+    @Expose
+    private String content;
+
 
     private String shortDescription;
 
     public RedditItem() {
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public String getIconImgUrl() {
@@ -66,8 +84,24 @@ public class RedditItem implements Serializable {
         this.description = description;
     }
 
+    public String getContent() {
+        // Switch relative paths to full absolute urls
+        final String relativeHtml = StringEscapeUtils.unescapeHtml(content);
+        final String absoluteHtml
+                = relativeHtml
+                        .replace("href=\"//", "href=\"" + RedditItemAPI.HTTP_BASE + "/")
+                        .replace("href=\"/", "href=\"" + RedditItemAPI.BASE_URL + "/");
+        return absoluteHtml;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
     public String getShortDescription() {
-        return description.substring(0, Math.min(description.length(), 500));
+        // Limit description to 500 chars, for faster UI rendering
+        return StringEscapeUtils
+                .unescapeHtml(description.substring(0, Math.min(description.length(), 500)));
     }
 
     @Override

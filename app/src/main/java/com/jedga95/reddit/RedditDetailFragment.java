@@ -1,9 +1,12 @@
 package com.jedga95.reddit;
 
 import android.app.Activity;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,32 +39,40 @@ public class RedditDetailFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.reddit_detail, container, false);
 
         if (getArguments().containsKey(ARG_SERIAL_ITEM)) {
-
             mItem = (RedditItem) getArguments().getSerializable(ARG_SERIAL_ITEM);
 
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity
+            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) getActivity()
                     .findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
                 appBarLayout.setTitle(mItem.getDisplayName());
             }
         }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.reddit_detail, container, false);
 
         // Show the content as text in a TextView.
         if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.reddit_detail)).setText(mItem.getDescription());
+            TextView detail = (TextView) rootView.findViewById(R.id.reddit_detail);
+            detail.setText(fromHtml(mItem.getContent()));
+            detail.setMovementMethod(LinkMovementMethod.getInstance());
+            detail.setLinksClickable(true);
+
         }
 
         return rootView;
+    }
+
+    @SuppressWarnings("deprecation")
+    public static Spanned fromHtml(String html){
+        Spanned result;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            result = Html.fromHtml(html,Html.FROM_HTML_MODE_LEGACY);
+        } else {
+            result = Html.fromHtml(html);
+        }
+        return result;
     }
 }

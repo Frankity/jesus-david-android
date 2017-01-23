@@ -1,7 +1,9 @@
 package com.jedga95.reddit;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.jedga95.reddit.reddits.json.RedditItemAPI;
 import com.jedga95.reddit.reddits.json.model.RedditItem;
 import com.squareup.picasso.Picasso;
 
@@ -29,6 +32,10 @@ public class RedditDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reddit_detail);
+
+        final RedditItem item = (RedditItem) getIntent()
+                .getSerializableExtra(RedditDetailFragment.ARG_SERIAL_ITEM);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
 
@@ -38,9 +45,30 @@ public class RedditDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        FloatingActionButton openOnBrowser
+                = (FloatingActionButton) findViewById(R.id.open_on_browser_fab);
+        openOnBrowser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent browserIntent = new Intent(
+                            Intent.ACTION_VIEW, Uri.parse(RedditItemAPI.BASE_URL + item.getUrl()));
+                    startActivity(browserIntent);
+                } catch (ActivityNotFoundException e) {
+                    // No activity found to handle intent
+                }
+            }
+        });
+
         ImageView toolbarBackground = (ImageView) findViewById(R.id.toolbar_background);
         if (toolbarBackground != null) {
             toolbarBackground.setColorFilter(0x7f000000, PorterDuff.Mode.DARKEN);
+        }
+
+        if (!TextUtils.isEmpty(item.getBannerImageUrl())) {
+            Picasso.with(this).load(item.getBannerImageUrl()).into(toolbarBackground);
+        } else if (!TextUtils.isEmpty(item.getIconImgUrl())) {
+            Picasso.with(this).load(item.getIconImgUrl()).into(toolbarBackground);
         }
 
         // savedInstanceState is non-null when there is fragment state
@@ -56,13 +84,6 @@ public class RedditDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            RedditItem item = (RedditItem) getIntent()
-                    .getSerializableExtra(RedditDetailFragment.ARG_SERIAL_ITEM);
-            if (!TextUtils.isEmpty(item.getBannerImageUrl())) {
-                Picasso.with(this).load(item.getBannerImageUrl()).into(toolbarBackground);
-            } else if (!TextUtils.isEmpty(item.getIconImgUrl())) {
-                Picasso.with(this).load(item.getIconImgUrl()).into(toolbarBackground);
-            }
             arguments.putSerializable(RedditDetailFragment.ARG_SERIAL_ITEM, item);
             RedditDetailFragment fragment = new RedditDetailFragment();
             fragment.setArguments(arguments);
